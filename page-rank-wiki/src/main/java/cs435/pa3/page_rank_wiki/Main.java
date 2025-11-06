@@ -42,29 +42,37 @@ public class Main {
             return new scala.Tuple2<>(link._1(), new scala.Tuple3<>(link._2._1(), pageRank, link._2._2()));
         });
         JavaPairRDD<Long, scala.Tuple3<String, Double, String>> withoutTaxPageRank = WithoutTaxation.getPageRank(dataWithPageRank, count);
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 25; i++){
             withoutTaxPageRank = WithoutTaxation.getPageRank(withoutTaxPageRank, count);
-            JavaPairRDD<String, Double> formattedOutput = withoutTaxPageRank.mapToPair(page -> {
-                String article = page._2._1();
-                Double finalPageRank = page._2._2();
-                return new scala.Tuple2(article, finalPageRank);
-            });
-            JavaPairRDD<String, Double> sortedFormattedOutput = formattedOutput.sortByKey(false);
-            Integer iteration = i;
-            sortedFormattedOutput.saveAsTextFile(outpath + "/WithoutTaxation" + iteration.toString());
         }
+        JavaPairRDD<Double, String> formattedOutput = withoutTaxPageRank.mapToPair(page -> {
+            String article = page._2._1();
+            Double finalPageRank = page._2._2();
+            return new scala.Tuple2(finalPageRank, article);
+        });
+        JavaPairRDD<Double, String> sortedFormattedOutput = formattedOutput.sortByKey(false);
+        JavaPairRDD<String, Double> finalOutput = sortedFormattedOutput.mapToPair(page -> {
+            String article = page._2();
+            Double finalPageRank = page._1();
+            return new scala.Tuple2(article, finalPageRank);
+        });
+        finalOutput.saveAsTextFile(outpath + "/WithoutTaxation");
         JavaPairRDD<Long, scala.Tuple3<String, Double, String>> taxPageRank = WithTaxation.getPageRank(dataWithPageRank, count);
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 25; i++){
             taxPageRank = WithTaxation.getPageRank(taxPageRank, count);
-            JavaPairRDD<String, Double> formattedTaxOutput = taxPageRank.mapToPair(page -> {
-                String article = page._2._1();
-                Double finalPageRank = page._2._2();
-                return new scala.Tuple2(article, finalPageRank);
-            });
-            JavaPairRDD<String, Double> sortedFormattedTaxOutput = formattedTaxOutput.sortByKey(false);
-            Integer iteration = i;
-            sortedFormattedTaxOutput.saveAsTextFile(outpath + "/WithTaxation" + iteration.toString());
         }
+        JavaPairRDD<Double, String> formattedTaxOutput = taxPageRank.mapToPair(page -> {
+            String article = page._2._1();
+            Double finalPageRank = page._2._2();
+            return new scala.Tuple2(finalPageRank, article);
+        });
+        JavaPairRDD<Double, String> sortedFormattedTaxOutput = formattedTaxOutput.sortByKey(false);
+        JavaPairRDD<String, Double> finalTaxOutput = sortedFormattedTaxOutput.mapToPair(page -> {
+            String article = page._2();
+            Double finalPageRank = page._1();
+            return new scala.Tuple2(article, finalPageRank);
+        });
+        finalTaxOutput.saveAsTextFile(outpath + "/WithTaxation");
         sc.stop();
     }
 }
